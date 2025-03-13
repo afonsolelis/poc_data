@@ -1,0 +1,48 @@
+version: '3.8'
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"      # Porta AMQP para conexões
+      - "15672:15672"    # Porta da interface de gerenciamento
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.17.3
+    container_name: logstash
+    ports:
+      - "5044:5044"  # Exemplo: porta para Beats ou outro input, se necessário
+      - "9600:9600"  # API de monitoramento do Logstash
+    volumes:
+      - ./logstash/config:/usr/share/logstash/config
+      - ./logstash/pipeline:/usr/share/logstash/pipeline
+    depends_on:
+      - rabbitmq
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    container_name: clickhouse
+    ports:
+      - "8123:8123"  # Porta HTTP para consultas
+      - "9000:9000"  # Porta nativa para conexão
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+      # Monta o diretório local com a configuração de usuários no ClickHouse
+      - ./clickhouse/config:/etc/clickhouse-server/users.d
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"  # Interface web do Grafana
+    depends_on:
+      - clickhouse
+
+volumes:
+  rabbitmq_data:
+  clickhouse_data:
