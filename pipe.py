@@ -49,7 +49,7 @@ def main():
                 )
             )
             print(f" [x] Enviado: {message}")
-            time.sleep(1)
+            time.sleep(0.1)
     except KeyboardInterrupt:
         print("Encerrando produtor...")
     finally:
